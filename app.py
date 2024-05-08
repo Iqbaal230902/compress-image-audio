@@ -1,0 +1,67 @@
+import streamlit as st
+import os
+import io
+from PIL import Image
+from compression_utils import compress_audio, compress_image
+
+# Main function
+def main():
+    st.title("File Compression App (1217050069)")
+    
+    # Sidebar
+    st.sidebar.title("Settings")
+    audio_bitrate = st.sidebar.selectbox("Select audio bitrate", ["64k", "128k", "192k", "256k", "320k"])
+    image_quality = st.sidebar.slider("Select image quality", min_value=1, max_value=100, value=50)
+    
+    # Main content
+    st.write("""
+    ## Upload your files and compress them!
+    """)
+    
+    # File upload - audio
+    audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav"])
+    
+    if audio_file is not None:
+        st.audio(audio_file, format='audio/mp3', start_time=0)
+        st.write("Uploaded Audio File Details:")
+        audio_details = {"Filename":audio_file.name,"FileType":audio_file.type,"FileSize":audio_file.size}
+        st.write(audio_details)
+        
+        # Compress audio button
+        if st.button("Compress Audio"):
+            st.write("Compressing audio...")
+            compressed_audio = compress_audio(audio_file, bitrate=audio_bitrate)
+            st.success("Audio compression successful!")
+            
+            # Download button for compressed audio
+            st.write("### Download Compressed Audio")
+            audio_download_button_str = f"Download Compressed Audio File ({os.path.splitext(audio_file.name)[0]}_compressed.mp3)"
+            st.download_button(label=audio_download_button_str, data=compressed_audio, file_name=f"{os.path.splitext(audio_file.name)[0]}_compressed.mp3", mime="audio/mpeg", key=None)
+    
+    # File upload - image
+    image_file = st.file_uploader("Upload an image file", type=["jpg", "jpeg", "png"])
+    
+    if image_file is not None:
+        st.image(image_file, caption="Uploaded Image", use_column_width=True)
+        st.write("Uploaded Image File Details:")
+        image_details = {"Filename":image_file.name,"FileType":image_file.type,"FileSize":image_file.size}
+        st.write(image_details)
+        
+        # Compress image button
+        if st.button("Compress Image"):
+            st.write("Compressing image...")
+            compressed_image = compress_image(image_file, quality=image_quality)
+            st.success("Image compression successful!")
+            
+            # Display compressed image
+            st.write("### Compressed Image")
+            st.image(io.BytesIO(compressed_image), caption="Compressed Image", use_column_width=True, format='JPEG')
+            
+            # Download button for compressed image
+            st.write("### Download Compressed Image")
+            image_download_button_str = f"Download Compressed Image File"
+            st.download_button(label=image_download_button_str, data=compressed_image, file_name=f"{os.path.splitext(image_file.name)[0]}_compressed.jpg", mime="image/jpeg", key=None)
+
+# Run the app
+if __name__ == '__main__':
+    main()
